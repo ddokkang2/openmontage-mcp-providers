@@ -189,10 +189,29 @@ export async function estimateGenerationCost(connection, provider, options) {
   const generation = buildGenerationCall(provider, toolsResult, options);
   const pricingTool = resolveTool(provider, toolsResult, "pricing", { required: false });
   if (pricingTool) {
+    let pricingArguments = generation.args;
+    if (provider.adapter === "magnific") {
+      const clips = generation.args.video?.clips ?? [];
+      if (clips.length !== 1) {
+        throw new UserError(
+          "Magnific 비용 확인은 한 번에 한 clip만 지원합니다. OpenMontage job을 clip별로 나누세요.",
+        );
+      }
+      // Magnific's live simulate_cost contract currently prices the target
+      // clip fields directly, while video_generate wraps the same clip in
+      // video.clips[]. Keep this normalization isolated to the pricing call.
+      pricingArguments = clips[0];
+    }
     const result = await connection.callTool(pricingTool.name, {
       tool: generation.tool.name,
-      arguments: generation.args,
+      arguments: pricingArguments,
     });
+    if (result.isError) {
+      throw new ProviderError(
+        `${provider.displayName} 비용 조회 실패`,
+        unwrapToolResult(result),
+      );
+    }
     return {
       provider: provider.id,
       model: options.model,
