@@ -61,12 +61,11 @@ export function compileScenePlan(
 ) {
   if (!model) {
     throw new UserError(
-      "모델은 자동 추측하지 않습니다. doctor 결과에서 모델을 고른 뒤 --model로 지정하세요.",
+      "모델은 자동 추측하지 않습니다. catalog 결과에서 고른 정확한 값을 --model로 지정하세요.",
     );
   }
   const taskTraceId = uuidV7();
   const jobs = [];
-
   for (const scene of scenePlan.scenes) {
     const duration = Number(scene.end_seconds) - Number(scene.start_seconds);
     if (!Number.isFinite(duration) || duration <= 0) {
@@ -85,15 +84,13 @@ export function compileScenePlan(
         resolution,
         enableAudio,
         taskTraceId,
-        rationale: `OpenMontage scene ${scene.id}에 필요한 생성형 영상 자산 제작`,
+        rationale: `OpenMontage scene ${scene.id}에 필요한 생성 영상 에셋`,
       });
     });
   }
-
   if (jobs.length === 0) {
-    throw new UserError("source=generate인 video/animation 자산이 scene plan에 없습니다.");
+    throw new UserError("source=generate인 video/animation 에셋이 scene plan에 없습니다.");
   }
-
   return {
     version: "1.0",
     source: "openmontage/scene_plan",
@@ -121,8 +118,8 @@ export function createAssetManifest(results, projectRoot = process.cwd()) {
     generation_summary: `Generated through ${result.provider} MCP`,
     provider: `${result.provider}_mcp`,
     original_url: result.url,
+    approved_cost: result.approvedCost,
   }));
-
   for (const asset of assets) {
     for (const [key, value] of Object.entries(asset)) {
       if (value === undefined) {
@@ -130,12 +127,12 @@ export function createAssetManifest(results, projectRoot = process.cwd()) {
       }
     }
   }
-
   return {
     version: "1.0",
     assets,
     metadata: {
-      cost_note: "MCP provider did not expose a normalized USD cost; check provider credits.",
+      cost_note: "Each paid job requires explicit provider/model/options/cost approval.",
+      automatic_provider_fallback: false,
     },
   };
 }

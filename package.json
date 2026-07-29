@@ -1,7 +1,7 @@
 {
   "name": "openmontage-mcp-providers",
-  "version": "0.1.0",
-  "description": "A generic MCP bridge for OpenMontage, with an official Kling MCP profile.",
+  "version": "0.2.0",
+  "description": "A safety-first MCP provider bridge for OpenMontage creative generation.",
   "author": "do.aiworks",
   "type": "module",
   "bin": {
@@ -22,6 +22,9 @@
     "openmontage",
     "mcp",
     "kling",
+    "higgsfield",
+    "magnific",
+    "bbanana",
     "video-generation",
     "model-context-protocol"
   ],

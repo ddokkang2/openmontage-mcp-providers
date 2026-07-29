@@ -1,0 +1,27 @@
+{
+  "id": "bbanana",
+  "displayName": "BBANANA AI MCP",
+  "adapter": "bbanana",
+  "description": "BBANANA multi-model creative generation through its Streamable HTTP MCP.",
+  "transport": {
+    "type": "streamable-http",
+    "url": "https://www.bbanana.ai/mcp",
+    "bearerTokenEnv": "BBANANA_MCP_TOKEN"
+  },
+  "commercialGeneration": true,
+  "requiresCostApproval": true,
+  "tools": {
+    "catalog": "list_models",
+    "textToVideo": "generate_video",
+    "query": "get_status",
+    "image": "generate_image",
+    "audio": "generate_audio",
+    "avatar": "generate_avatar",
+    "editImage": "edit_image",
+    "modifyMedia": "modify_media"
+  },
+  "protocol": {
+    "generationIdField": "taskId",
+    "queryGenerationIdField": "taskId"
+  }
+}

@@ -67,6 +67,9 @@ export function extractGenerationId(result, preferredKey = "generationId") {
     "generation_id",
     "taskId",
     "task_id",
+    "identifier",
+    "creationIdentifier",
+    "creation_identifier",
   ]);
 }
 
@@ -110,14 +113,23 @@ export function extractUrls(result) {
 export function extractModelNames(result) {
   const value = unwrapToolResult(result);
   const models = [];
-  walk(value, (item) => {
+  walk(value, (item, path) => {
     if (
       typeof item === "string" &&
-      (/^kling[-_]/i.test(item) || /^kwaivgi\//i.test(item))
+      (/^kling[-_]/i.test(item) ||
+        /^kwaivgi\//i.test(item) ||
+        ["slug", "service_name", "model", "model_id", "job_set_type"].includes(
+          String(path.at(-1) ?? "").toLowerCase(),
+        ))
     ) {
       models.push(item);
     }
   });
+  if (typeof value === "string") {
+    for (const match of value.matchAll(/^\s*(?:-\s*)?(?:slug|service_name|job_set_type):\s*([^\s,]+)/gim)) {
+      models.push(match[1].replace(/^["']|["']$/g, ""));
+    }
+  }
   return [...new Set(models)].sort();
 }
 

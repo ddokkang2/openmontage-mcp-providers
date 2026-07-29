@@ -16,12 +16,20 @@ function readJson(path) {
 }
 
 function validateProvider(provider, source) {
-  if (!provider?.id || !provider?.transport?.command) {
+  const kind = provider?.transport?.type ?? "stdio";
+  const validTransport =
+    (kind === "stdio" && provider?.transport?.command) ||
+    (kind === "streamable-http" && provider?.transport?.url);
+  if (!provider?.id || !validTransport) {
     throw new UserError(`잘못된 provider 설정입니다: ${source}`);
   }
-  provider.transport.args ??= [];
+  provider.transport.type = kind;
+  if (kind === "stdio") {
+    provider.transport.args ??= [];
+  }
   provider.tools ??= {};
   provider.protocol ??= {};
+  provider.adapter ??= provider.id;
   return provider;
 }
 

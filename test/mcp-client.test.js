@@ -20,3 +20,18 @@ test("connects to a generic stdio MCP server", async () => {
     await connection.close();
   }
 });
+
+test("refuses bearer HTTP transport when its environment variable is missing", async () => {
+  const envName = "OM_MCP_TEST_TOKEN_MUST_NOT_EXIST";
+  delete process.env[envName];
+  const connection = new McpConnection({
+    id: "http-mock",
+    displayName: "HTTP mock",
+    transport: {
+      type: "streamable-http",
+      url: "https://example.invalid/mcp",
+      bearerTokenEnv: envName,
+    },
+  });
+  await assert.rejects(connection.connect(), new RegExp(envName));
+});
