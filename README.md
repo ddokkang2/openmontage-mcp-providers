@@ -3,6 +3,10 @@
 OpenMontage의 기획 결과를 외부 생성 MCP로 보내고, 완성된 미디어를 다시
 OpenMontage `asset_manifest`로 돌려주는 독립형 브리지입니다.
 
+> 한국어로 처음부터 설치하고 사용하는 방법은
+> [OpenMontage + MCP Provider 설치·사용 매뉴얼](docs/OPENMONTAGE_MCP_MANUAL_KO.md)을
+> 참고하세요.
+
 지원 provider:
 
 | Provider | 인증 | 주요 용도 | 현재 어댑터 |
