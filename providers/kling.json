@@ -1,0 +1,30 @@
+{
+  "id": "kling",
+  "displayName": "Kling Official MCP",
+  "description": "Official Kling MCP through the mcp-remote OAuth proxy.",
+  "transport": {
+    "command": "npx.cmd",
+    "args": [
+      "-y",
+      "mcp-remote",
+      "https://kling.ai/mcp"
+    ]
+  },
+  "tools": {
+    "identity": "who_am_i",
+    "credits": "query_membership_and_credits",
+    "textToVideo": "text_to_video",
+    "imageToVideo": "image_to_video",
+    "query": "query_tasks",
+    "upload": "file_upload"
+  },
+  "protocol": {
+    "modelField": "model",
+    "argumentsField": "arguments",
+    "inputsField": "inputs",
+    "rationaleField": "rationale",
+    "traceField": "taskTraceId",
+    "generationIdField": "generationId",
+    "queryGenerationIdField": "generationId"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "providers": [
+    {
+      "id": "my-provider",
+      "displayName": "My MCP Provider",
+      "transport": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://example.com/mcp"
+        ]
+      },
+      "tools": {},
+      "protocol": {}
+    }
+  ]
+}

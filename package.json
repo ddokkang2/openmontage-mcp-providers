@@ -1,0 +1,45 @@
+{
+  "name": "openmontage-mcp-providers",
+  "version": "0.1.0",
+  "description": "A generic MCP bridge for OpenMontage, with an official Kling MCP profile.",
+  "author": "do.aiworks",
+  "type": "module",
+  "bin": {
+    "om-mcp": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/cli.js && node --test",
+    "doctor:kling": "node src/cli.js doctor --provider kling"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5"
+  },
+  "keywords": [
+    "openmontage",
+    "mcp",
+    "kling",
+    "video-generation",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ddokkang2/openmontage-mcp-providers.git"
+  },
+  "homepage": "https://github.com/ddokkang2/openmontage-mcp-providers#readme",
+  "bugs": {
+    "url": "https://github.com/ddokkang2/openmontage-mcp-providers/issues"
+  },
+  "files": [
+    "src",
+    "providers",
+    "integrations",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ]
+}

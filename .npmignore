@@ -1,0 +1,10 @@
+node_modules/
+__pycache__/
+*.py[cod]
+test/
+fixtures/
+output/
+.github/
+.env
+.mcp-auth/
+.state/

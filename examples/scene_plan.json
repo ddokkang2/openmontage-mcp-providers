@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "style_playbook": "premium-minimalist",
+  "scenes": [
+    {
+      "id": "scene-01",
+      "type": "generated",
+      "description": "A clear perfume bottle on black marble at blue hour",
+      "start_seconds": 0,
+      "end_seconds": 5,
+      "framing": "macro product shot",
+      "movement": "slow dolly in",
+      "shot_language": {
+        "shot_size": "close_up",
+        "camera_movement": "dolly_in",
+        "lens_mm": 85,
+        "lighting_key": "low_key",
+        "depth_of_field": "shallow",
+        "color_temperature": "cool"
+      },
+      "shot_intent": "Create an immediate premium fragrance impression",
+      "texture_keywords": [
+        "photoreal",
+        "controlled highlights",
+        "silver mist"
+      ],
+      "required_assets": [
+        {
+          "type": "video",
+          "description": "Luxury perfume bottle hero macro with subtle moving reflections",
+          "source": "generate"
+        }
+      ]
+    }
+  ]
+}
