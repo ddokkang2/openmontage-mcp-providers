@@ -3,9 +3,10 @@
 OpenMontage의 기획 결과를 외부 생성 MCP로 보내고, 완성된 미디어를 다시
 OpenMontage `asset_manifest`로 돌려주는 독립형 브리지입니다.
 
-> 한국어로 처음부터 설치하고 사용하는 방법은
+> Windows와 macOS에서 처음부터 설치하고 사용하는 방법은
 > [OpenMontage + MCP Provider 설치·사용 매뉴얼](docs/OPENMONTAGE_MCP_MANUAL_KO.md)을
-> 참고하세요.
+> 참고하세요. 작업 폴더 지정, OAuth, BBANANA 토큰, 비용 승인, Seedance 멀티 이미지
+> 생성과 문제 해결까지 포함합니다.
 
 지원 provider:
 
@@ -45,18 +46,37 @@ provider를 자동으로 바꾸지 않습니다. 실패나 timeout 때 자동 �
 않습니다. 유료 생성에는 `--yes`가 필요하고, 비용 조회를 지원하는 provider에는
 `--approved-cost`도 필요합니다.
 
-## 설치
+## 빠른 설치
 
 Node.js 20 이상이 필요합니다.
 
+Windows PowerShell:
+
 ```powershell
 git clone https://github.com/ddokkang2/openmontage-mcp-providers.git
-cd openmontage-mcp-providers
-npm install
+Set-Location openmontage-mcp-providers
+npm.cmd install
 node src\cli.js providers
 ```
 
+macOS Terminal:
+
+```bash
+git clone https://github.com/ddokkang2/openmontage-mcp-providers.git
+cd openmontage-mcp-providers
+npm install
+node src/cli.js providers
+```
+
+OpenMontage까지 함께 설치하려면
+[Windows + macOS 전체 매뉴얼](docs/OPENMONTAGE_MCP_MANUAL_KO.md)을 사용하세요.
+
 ### OAuth provider
+
+아래는 Windows PowerShell 명령입니다. macOS에서는 `npx.cmd`를 `npx`로,
+경로의 `\`를 `/`로 바꾸세요. 전체 macOS 명령은
+[설치·사용 매뉴얼](docs/OPENMONTAGE_MCP_MANUAL_KO.md#8-oauth-provider-인증)에
+정리되어 있습니다.
 
 Kling:
 
@@ -89,6 +109,17 @@ OAuth 토큰이나 `.mcp-auth` 내용을 저장소에 커밋하지 마세요.
 $env:BBANANA_MCP_TOKEN = "YOUR_TOKEN"
 node src\cli.js doctor --provider bbanana
 ```
+
+macOS 현재 Terminal에서는 다음처럼 설정합니다.
+
+```bash
+export BBANANA_MCP_TOKEN="YOUR_TOKEN"
+node src/cli.js doctor --provider bbanana
+```
+
+평문 셸 설정 대신 macOS Keychain을 사용하는 방법은
+[토큰 설정 절](docs/OPENMONTAGE_MCP_MANUAL_KO.md#9-bbanana-토큰-설정)을
+참고하세요.
 
 `doctor`는 연결, 인증, 도구 목록과 읽기 전용 모델 카탈로그만 확인하고
 `.state/<provider>.json` readiness 영수증을 만듭니다. 생성은 제출하지 않습니다.
