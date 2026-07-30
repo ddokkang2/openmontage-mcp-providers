@@ -3,6 +3,12 @@ import { dirname, extname, resolve } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
+import {
+  assertModelVisible,
+  buildGenerationCall,
+  buildQueryCall,
+  inspectProvider,
+} from "./adapters.js";
 import { ProviderError, UserError } from "./errors.js";
 import {
   extractGenerationId,
@@ -12,54 +18,8 @@ import {
   isSuccessfulStatus,
   unwrapToolResult,
 } from "./normalize.js";
-import { uuidV7 } from "./trace-id.js";
 
 const delay = (ms) => new Promise((resolveDelay) => setTimeout(resolveDelay, ms));
-
-function nameValueArguments(options) {
-  const pairs = [
-    ["prompt", options.prompt],
-    ["duration", options.duration],
-    ["aspect_ratio", options.aspectRatio],
-    ["resolution", options.resolution],
-    ["imageCount", options.imageCount],
-    ["prefer_multi_shots", options.preferMultiShots],
-    ["enable_audio", options.enableAudio],
-  ];
-  return pairs
-    .filter(([, value]) => value !== undefined && value !== null && value !== "")
-    .map(([name, value]) => ({ name, value: String(value) }));
-}
-
-export function buildGenerationRequest(provider, options) {
-  const protocol = provider.protocol;
-  const request = {
-    [protocol.modelField]: options.model,
-    [protocol.argumentsField]: nameValueArguments(options),
-    [protocol.inputsField]: options.inputs ?? [],
-    [protocol.rationaleField]: options.rationale ?? "OpenMontage MCP video generation",
-    [protocol.traceField]: options.taskTraceId ?? uuidV7(),
-  };
-  return request;
-}
-
-function assertTool(toolsResult, name) {
-  const names = new Set((toolsResult.tools ?? []).map((tool) => tool.name));
-  if (!names.has(name)) {
-    throw new ProviderError(`MCP 서버에 필요한 도구가 없습니다: ${name}`);
-  }
-}
-
-function assertModelAdvertised(identityResult, model) {
-  const normalized = unwrapToolResult(identityResult);
-  const text = JSON.stringify(normalized);
-  if (!text.includes(model)) {
-    throw new UserError(
-      `현재 계정의 who_am_i 결과에서 모델을 찾지 못했습니다: ${model}\n` +
-        "doctor를 실행하고 표시된 정확한 모델명을 사용하세요.",
-    );
-  }
-}
 
 async function download(url, outputPath) {
   const absolute = resolve(outputPath);
@@ -80,49 +40,64 @@ function chooseMediaUrl(urls) {
   );
 }
 
-export async function generateVideo(connection, provider, options) {
+function assertPaidApproval(provider, options) {
   if (!options.confirmPaidGeneration) {
     throw new UserError(
-      "이 명령은 유료 생성 작업을 제출합니다. 승인했다면 --yes를 추가하세요.",
+      "이 명령은 유료 생성 작업을 제출합니다. 승인한다면 --yes를 추가하세요.",
     );
   }
+  if (provider.requiresCostApproval && !options.approvedCost) {
+    throw new UserError(
+      `${provider.displayName}은 모델별 비용 승인이 필요합니다. ` +
+        "catalog로 비용을 확인한 뒤 --approved-cost에 확인한 비용을 그대로 적으세요.",
+    );
+  }
+}
+
+export async function inspectProviderReadOnly(connection, provider) {
+  const toolsResult = await connection.listTools();
+  const inspection = await inspectProvider(connection, provider, toolsResult);
+  return { toolsResult, ...inspection };
+}
+
+export async function generateVideo(connection, provider, options) {
+  assertPaidApproval(provider, options);
   if (!options.model || !options.prompt) {
     throw new UserError("--model과 --prompt는 필수입니다.");
   }
 
-  const toolNames = provider.tools;
   const toolsResult = await connection.listTools();
-  for (const name of [toolNames.identity, toolNames.textToVideo, toolNames.query]) {
-    assertTool(toolsResult, name);
+  const inspection = await inspectProvider(connection, provider, toolsResult);
+  assertModelVisible(provider, inspection, options.model);
+
+  const planTool = provider.tools.plan;
+  if (planTool && (toolsResult.tools ?? []).some((tool) => tool.name === planTool)) {
+    await connection.callTool(planTool, {
+      prompt: options.prompt,
+      durationHint: Number(options.duration),
+      aspectRatioHint: options.aspectRatio,
+    });
   }
 
-  const traceField = provider.protocol.traceField;
-  const taskTraceId = options.taskTraceId ?? uuidV7();
-  const identity = await connection.callTool(toolNames.identity, {
-    [traceField]: taskTraceId,
-  });
-  assertModelAdvertised(identity, options.model);
-
-  const request = buildGenerationRequest(provider, { ...options, taskTraceId });
-  const submitted = await connection.callTool(toolNames.textToVideo, request);
+  const generation = buildGenerationCall(provider, toolsResult, options);
+  const submitted = await connection.callTool(generation.tool.name, generation.args);
   const generationId = extractGenerationId(
     submitted,
     provider.protocol.generationIdField,
   );
-  if (!generationId) {
-    throw new ProviderError("생성 응답에서 generationId를 찾지 못했습니다.", submitted);
+  const submittedUrls = extractUrls(submitted);
+  if (!generationId && submittedUrls.length === 0) {
+    throw new ProviderError(
+      "생성 응답에서 작업 ID나 결과 URL을 찾지 못했습니다.",
+      unwrapToolResult(submitted),
+    );
   }
 
+  let queried = submitted;
   const startedAt = Date.now();
   const timeoutMs = Number(options.timeoutSeconds ?? 900) * 1000;
   const pollMs = Number(options.pollSeconds ?? 10) * 1000;
-  let queried;
   while (Date.now() - startedAt < timeoutMs) {
-    await delay(pollMs);
-    queried = await connection.callTool(toolNames.query, {
-      [provider.protocol.queryGenerationIdField]: generationId,
-      [traceField]: taskTraceId,
-    });
     const status = extractStatus(queried);
     const urls = extractUrls(queried);
     if (urls.length > 0 && (!status || isSuccessfulStatus(status))) {
@@ -133,7 +108,7 @@ export async function generateVideo(connection, provider, options) {
       return {
         provider: provider.id,
         generationId,
-        taskTraceId,
+        taskTraceId: generation.taskTraceId,
         status: status ?? "completed",
         url,
         outputPath,
@@ -141,15 +116,30 @@ export async function generateVideo(connection, provider, options) {
         model: options.model,
         duration: options.duration,
         resolution: options.resolution,
+        approvedCost: options.approvedCost,
       };
     }
     if (isFailedStatus(status)) {
-      throw new ProviderError(`Kling 생성 작업 실패: ${status}`, unwrapToolResult(queried));
+      throw new ProviderError(
+        `${provider.displayName} 생성 작업 실패: ${status}`,
+        unwrapToolResult(queried),
+      );
     }
+    if (!generationId) {
+      break;
+    }
+    await delay(pollMs);
+    const query = buildQueryCall(
+      provider,
+      toolsResult,
+      generationId,
+      generation.taskTraceId,
+    );
+    queried = await connection.callTool(query.tool.name, query.args);
   }
 
   throw new ProviderError(
-    `생성 대기 시간이 초과되었습니다. 자동 재제출하지 않았습니다. generationId=${generationId}`,
+    `생성 대기 시간이 초과되었습니다. 자동 재제출하지 않습니다. task=${generationId ?? "unknown"}`,
     unwrapToolResult(queried),
   );
 }

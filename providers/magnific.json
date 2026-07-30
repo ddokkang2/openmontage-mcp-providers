@@ -1,0 +1,29 @@
+{
+  "id": "magnific",
+  "displayName": "Magnific MCP",
+  "adapter": "magnific",
+  "description": "Official Magnific OAuth MCP for image, video, audio, 3D, and enhancement workflows.",
+  "transport": {
+    "type": "stdio",
+    "command": "npx.cmd",
+    "args": ["-y", "mcp-remote", "https://mcp.magnific.com"]
+  },
+  "commercialGeneration": true,
+  "requiresCostApproval": true,
+  "tools": {
+    "identity": "account_balance",
+    "plan": "video_plan",
+    "catalog": "video_models_list",
+    "pricing": "simulate_cost",
+    "textToVideo": "video_generate",
+    "query": "creation_status",
+    "wait": "creations_wait",
+    "image": "images_generate",
+    "upscale": "images_upscale",
+    "imageCatalog": "images_models_list"
+  },
+  "protocol": {
+    "generationIdField": "id",
+    "queryGenerationIdField": "id"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "higgsfield",
+  "displayName": "Higgsfield MCP",
+  "adapter": "schema",
+  "description": "Official Higgsfield OAuth MCP for video, image, audio, 3D, and character workflows.",
+  "transport": {
+    "type": "stdio",
+    "command": "npx.cmd",
+    "args": ["-y", "mcp-remote", "https://mcp.higgsfield.ai/mcp"]
+  },
+  "commercialGeneration": true,
+  "requiresCostApproval": true,
+  "tools": {
+    "identityCandidates": ["account", "account_info", "get_account", "get_credits"],
+    "catalogCandidates": ["list_models", "video_models_list", "models_list"],
+    "textToVideoCandidates": ["generate_video", "video_generate", "create_video"],
+    "queryCandidates": ["get_status", "generation_status", "task_status", "creation_status"]
+  },
+  "protocol": {
+    "generationIdField": "taskId",
+    "queryGenerationIdField": "taskId"
+  }
+}

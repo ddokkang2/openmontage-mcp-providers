@@ -1,8 +1,10 @@
 {
   "id": "kling",
   "displayName": "Kling Official MCP",
+  "adapter": "kling",
   "description": "Official Kling MCP through the mcp-remote OAuth proxy.",
   "transport": {
+    "type": "stdio",
     "command": "npx.cmd",
     "args": [
       "-y",
@@ -10,6 +12,8 @@
       "https://kling.ai/mcp"
     ]
   },
+  "commercialGeneration": true,
+  "requiresCostApproval": true,
   "tools": {
     "identity": "who_am_i",
     "credits": "query_membership_and_credits",
